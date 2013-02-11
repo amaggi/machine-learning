@@ -4,6 +4,8 @@
 from matplotlib import pyplot as plt
 from concurrent.futures import ProcessPoolExecutor
 import numpy as np
+import os
+import sys
 
 
 def generate_thumbnails(number, filename, order='F'):
@@ -12,16 +14,19 @@ def generate_thumbnails(number, filename, order='F'):
 
     return filename
 
-def filenames(numbers):
+def filenames(numbers, directory):
     for number in range(1, len(numbers)+1):
-        yield "/tmp/numbers_%d.png" % number
+        path = os.path.join(directory, "numbers_%d.png" % number)
+        yield path
 
 
 if __name__ == '__main__':
+    directory = sys.argv[1]
+
     data = dict(np.load('data.npz').items())
 
     numbers = data['numbers']
 
     with ProcessPoolExecutor() as executor:
-        for filename in executor.map(generate_thumbnails, numbers, filenames(numbers)):
+        for filename in executor.map(generate_thumbnails, numbers, filenames(numbers, directory)):
             print(filename)
