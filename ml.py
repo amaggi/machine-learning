@@ -1,5 +1,9 @@
-from functions import sigmoid
 import numpy as np
+
+
+def sigmoid(array):
+    return 1/(1+np.exp(-array))
+
 
 class NeuralNetwork(object):
     def __init__(self, weights, activation_function=sigmoid):
