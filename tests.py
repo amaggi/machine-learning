@@ -22,7 +22,7 @@ class TestNeuralNetwork(unittest.TestCase):
         predictions = np.array(np.argmax(predictions, axis=1))
         labels = self.labels - 1
         success_count = (labels == predictions).sum()
-        self.assertEqual(success_count, 3481)
+        self.assertEqual(success_count, 4876)
 
 
 if __name__ == '__main__':

@@ -12,6 +12,6 @@ class NeuralNetwork(object):
             if add_bias:
                 output_layer = np.append(1, output_layer)
 
-            output_layer = weight.dot(output_layer)
+            output_layer = self.h(weight.dot(output_layer))
 
         return output_layer
