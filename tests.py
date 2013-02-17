@@ -10,7 +10,7 @@ class TestNeuralNetwork(unittest.TestCase):
         
         self.weights = (data['theta1'], data['theta2'])
         self.numbers = data['numbers']
-        self.labels = np.array([ x[0] for x in data['labels']])
+        self.labels = data['labels']
         self.nn = NeuralNetwork(self.weights)
 
     def test_predict(self):
@@ -20,8 +20,7 @@ class TestNeuralNetwork(unittest.TestCase):
             )
 
         predictions = np.array(np.argmax(predictions, axis=1))
-        labels = self.labels - 1
-        success_count = (labels == predictions).sum()
+        success_count = (self.labels == predictions).sum()
         self.assertEqual(success_count, 4876)
 
 
