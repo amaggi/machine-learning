@@ -19,3 +19,6 @@ class NeuralNetwork(object):
             output_layer = self.h(weight.dot(output_layer))
 
         return output_layer
+
+    def train(self, )
+        pass
