@@ -5,12 +5,14 @@ from ml import BackPropagation, NeuralNetwork, sigmoid, sigmoid_gradient
 import numpy as np
 import unittest
 
+
 class TestSigmoid(unittest.TestCase):
     def test_sigmoid(self):
         self.assertEqual(sigmoid(0), 0.5)
 
     def test_sigmoid_gradient(self):
         self.assertEqual(sigmoid_gradient(0), 0.25)
+
 
 class TestNeuralNetwork(unittest.TestCase):
     def setUp(self):

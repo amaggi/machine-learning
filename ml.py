@@ -4,8 +4,9 @@ import numpy as np
 def sigmoid(z):
     return 1/(1+np.exp(-z))
 
+
 def sigmoid_gradient(z):
-    return sigmoid(z)*(1-sigmoid(z));
+    return sigmoid(z)*(1-sigmoid(z))
 
 
 class BackPropagation(object):
@@ -17,7 +18,10 @@ class BackPropagation(object):
         self.add_bias = add_bias
 
     def _penalty(self, weights):
-        return np.sum([ np.sum(np.sum(theta[:, 1:]**2, axis=1)) for theta in weights])
+        return np.sum([
+            np.sum(np.sum(theta[:, 1:]**2, axis=1))
+            for theta in weights
+        ])
 
     def _cost_function(self, weights, lambda_value):
         # TODO : activation_function arg
@@ -38,7 +42,9 @@ class BackPropagation(object):
 
             output_layer = sigmoid(np.dot(output_layer, weight.T))
 
-        return np.sum(np.sum(-Y*np.log(output_layer) - (1-Y)*np.log(1-output_layer), axis=1))/m + (l*p)/(2*m)
+        h = output_layer
+        r = (l*p)/(2*m)
+        return np.sum(np.sum(-Y*np.log(h) - (1-Y)*np.log(1-h), axis=1))/m + r
 
     def train(self):
         self._cost_function()
