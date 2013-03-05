@@ -4,6 +4,9 @@ import numpy as np
 def sigmoid(array):
     return 1/(1+np.exp(-array))
 
+def sigmoid_gradient(z):
+    return sigmoid(z)*(1-sigmoid(z));
+
 
 class BackPropagation(object):
     def __init__(self, weights, training_set, labels, add_bias=True):
