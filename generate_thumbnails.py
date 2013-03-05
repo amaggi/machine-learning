@@ -9,10 +9,11 @@ import sys
 
 
 def generate_thumbnails(number, filename, order='F'):
-    plt.imshow(number.reshape((20,20), order=order))
+    plt.imshow(number.reshape((20, 20), order=order))
     plt.savefig(filename)
 
     return filename
+
 
 def filenames(numbers, directory):
     for number in range(1, len(numbers)+1):
@@ -28,5 +29,11 @@ if __name__ == '__main__':
     numbers = data['numbers']
 
     with ProcessPoolExecutor() as executor:
-        for filename in executor.map(generate_thumbnails, numbers, filenames(numbers, directory)):
+        filenames = map(
+            generate_thumbnails,
+            numbers,
+            filenames(numbers, directory)
+        )
+
+        for filename in filenames:
             print(filename)
