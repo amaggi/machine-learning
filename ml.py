@@ -9,6 +9,10 @@ def sigmoid_gradient(z):
     return sigmoid(z)*(1-sigmoid(z))
 
 
+def random_weights(size, epsilon=0.12):
+        return np.random.rand(*size)*2*epsilon-epsilon
+
+
 class BackPropagation(object):
     def __init__(self, weights, training_set, labels, add_bias=True):
         self.training_set = training_set
@@ -34,15 +38,26 @@ class BackPropagation(object):
         for i in range(m):
             Y[i][self.labels[i]] = 1
 
-        output_layer = X
-        for weight in weights:
-            if self.add_bias:
-                ones = np.ones((output_layer.shape[0], 1))
-                output_layer = np.hstack((ones, output_layer))
+        if self.add_bias:
+            ones = np.ones((X.shape[0], 1))
+            input_layer = np.hstack((ones, X))
+        else:
+            input_layer = X
 
-            output_layer = sigmoid(np.dot(output_layer, weight.T))
+        activations = [input_layer]
+        z = [None]
 
-        h = output_layer
+        # Process hidden layers
+        for i in range(len(weights)):
+            z.append(np.dot(activations[-1], weights[i].T))
+            activations.append(sigmoid(z[-1]))
+
+            # Don't add bias terms on the last layer
+            if self.add_bias and i < len(weights)-1:
+                ones = np.ones((activations[-1].shape[0], 1))
+                activations[-1] = np.hstack((ones, activations[-1]))
+
+        h = activations[-1] # Output layer
         r = (l*p)/(2*m)
         return np.sum(np.sum(-Y*np.log(h) - (1-Y)*np.log(1-h), axis=1))/m + r
 
