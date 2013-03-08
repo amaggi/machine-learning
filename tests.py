@@ -43,7 +43,7 @@ class TestNeuralNetwork(unittest.TestCase):
 
     def test_backpropagation_cost_function(self):
         lambda_value = 0
-        cost = self.bp._cost_function(self.weights, lambda_value)
+        cost, gradient = self.bp._cost_function(self.weights, lambda_value)
         self.assertEqual(cost, 0.28762916516131881)
 
 if __name__ == '__main__':
