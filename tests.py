@@ -42,9 +42,9 @@ class TestNeuralNetwork(unittest.TestCase):
         self.assertEqual(penalty, 961.40693929604765)
 
     def test_backpropagation_cost_function(self):
-        lambda_value = 1
+        lambda_value = 0
         cost = self.bp._cost_function(self.weights, lambda_value)
-        self.assertEqual(cost, 0.38376985909092359)
+        self.assertEqual(cost, 0.28762916516131881)
 
 if __name__ == '__main__':
     unittest.main()
