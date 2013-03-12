@@ -13,7 +13,7 @@ def random_weights(size, epsilon=0.12):
     return np.random.rand(*size)*2*epsilon-epsilon
 
 
-def debug_initialize_weights(size):
+def debug_initialize_theta(size):
     w = np.zeros((size[0], size[1]+1))
     sins = np.sin(np.arange(1, w.size+1))
     return sins.reshape(w.shape, order='F')/10

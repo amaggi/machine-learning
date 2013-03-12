@@ -1,26 +1,21 @@
 #! /usr/bin/env python
 
 #from concurrent.futures import ProcessPoolExecutor
-from scipy.optimize import fmin_cg
 import numpy as np
 import unittest
 
-from ml import BackPropagation, NeuralNetwork
-from helpers import sigmoid,\
-                    sigmoid_gradient,\
-                    random_weights,\
-                    flatten_matrices,\
-                    reshape_vector,\
-                    debug_initialize_weights
+from ml import NeuralNetwork
+from helpers import sigmoid, sigmoid_gradient, random_weights,\
+                    flatten_matrices, reshape_vector, debug_initialize_theta
 
 
 datafile = np.load('data/data.npz')
 data = dict(datafile.items())
-TRAINING_SET = data['numbers']
+NUMBERS = data['numbers']
 LABELS = data['labels']
-WEIGHTS = (data['theta1'], data['theta2'])
-WEIGHTS_SHAPES = [w.shape for w in WEIGHTS]
-DEBUG_WEIGHTS = np.array([
+THETAS = (data['theta1'], data['theta2'])
+THETAS_SHAPES = [w.shape for w in THETAS]
+DEBUG_THETA = np.array([
     [0.0841471, -0.02794155, -0.09999902, -0.02879033],
     [0.09092974, 0.06569866, -0.05365729, -0.09613975],
     [0.014112, 0.09893582, 0.0420167, -0.07509872],
@@ -31,20 +26,20 @@ DEBUG_WEIGHTS = np.array([
 
 class TestHelpers(unittest.TestCase):
     def test_flatten_matrices(self):
-        (vector, shapes) = flatten_matrices(WEIGHTS)
+        (vector, shapes) = flatten_matrices(THETAS)
 
         self.assertEqual(vector.shape[0], 10285)
-        self.assertEqual(shapes, WEIGHTS_SHAPES)
+        self.assertEqual(shapes, THETAS_SHAPES)
 
     def test_reshape_vector(self):
-        vector, shapes = flatten_matrices(WEIGHTS)
+        vector, shapes = flatten_matrices(THETAS)
         matrices = list(reshape_vector(vector, shapes))
-        for m, w in zip(matrices, WEIGHTS):
+        for m, w in zip(matrices, THETAS):
             self.assertTrue((m == w).all())
 
-    def test_debug_initialize_weights(self):
-        w = debug_initialize_weights((5, 3))
-        self.assertTrue(np.allclose(DEBUG_WEIGHTS, w))
+    def test_debug_initialize_THETAS(self):
+        w = debug_initialize_theta((5, 3))
+        self.assertTrue(np.allclose(DEBUG_THETA, w))
 
 
 class TestSigmoid(unittest.TestCase):
@@ -55,62 +50,13 @@ class TestSigmoid(unittest.TestCase):
         self.assertEqual(sigmoid_gradient(0), 0.25)
 
 
-class TestBackPropagation(unittest.TestCase):
-    def setUp(self):
-        self.bp = BackPropagation(WEIGHTS, TRAINING_SET, LABELS)
-
-    def test_penalty(self):
-        penalty = self.bp._penalty(WEIGHTS)
-        self.assertEqual(penalty, 961.40693929604765)
-
-    def test_non_regularized_cost_function(self):
-        cost = self.bp._cost_function(self.bp.weights)
-        self.assertEqual(cost, 0.28762916516131881)
-
-    def test_regularized_cost_function(self):
-        bp = BackPropagation(WEIGHTS, TRAINING_SET, LABELS, lambda_value=1)
-        cost = bp._cost_function(self.bp.weights)
-        self.assertEqual(cost, 0.38376985909092359)
-
-    def test_gradient(self):
-        input_layer_size = 3
-        hidden_layer_size = 5
-        num_labels = 3
-        m = 5
-
-        theta1 = debug_initialize_weights((hidden_layer_size, input_layer_size))
-        theta2 = debug_initialize_weights((num_labels, hidden_layer_size))
-
-        X = debug_initialize_weights((m, input_layer_size-1))
-        y = np.mod(np.arange(1, m+1), num_labels).T
-
-        weights = np.concatenate((
-            theta1.ravel(order='F'),
-            theta2.ravel(order='F')
-        ))
-
-        bp = BackPropagation((theta1, theta2), X, y, lambda_value=0)
-
-        cost = bp._cost_function(weights)
-        gradient = bp._gradient(weights)
-
-    def test_train(self):
-        theta1 = random_weights(WEIGHTS[0].shape)
-        theta2 = random_weights(WEIGHTS[1].shape)
-        weights = (theta1, theta2)
-
-        new_bp = BackPropagation(weights, TRAINING_SET, LABELS, lambda_value=1)
-
-        flatten_weights = flatten_matrices(weights)[0]
-        #fmin_cg(new_bp._cost_function, flatten_weights, fprime=new_bp._gradient, maxiter=400)
-
-
 class TestNeuralNetwork(unittest.TestCase):
     def setUp(self):
-        self.weights = WEIGHTS
-        self.numbers = TRAINING_SET
-        self.labels = LABELS
-        self.nn = NeuralNetwork(WEIGHTS)
+        self.nn = NeuralNetwork(THETAS, training_set=NUMBERS, labels=LABELS)
+
+    def test_penalty(self):
+        penalty = self.nn._penalty(THETAS)
+        self.assertEqual(penalty, 961.40693929604765)
 
     def test_predict(self):
         # with ProcessPoolExecutor() as executor:
@@ -118,11 +64,55 @@ class TestNeuralNetwork(unittest.TestCase):
         #        executor.map(self.nn.predict, self.numbers)
         #    )
 
-        predictions = [self.nn.predict(n) for n in self.numbers]
+        predictions = [self.nn.predict(n) for n in NUMBERS]
 
         predictions = np.array(np.argmax(predictions, axis=1))
-        success_count = (self.labels == predictions).sum()
+        success_count = (LABELS == predictions).sum()
         self.assertEqual(success_count, 4876)
+
+    def test_non_regularized_cost_function(self):
+        lambda_value = 0
+        cost = self.nn._cost_function(self.nn.weights, lambda_value)
+        self.assertEqual(cost, 0.28762916516131881)
+
+    def test_regularized_cost_function(self):
+        lambda_value = 1
+        cost = self.nn._cost_function(self.nn.weights, lambda_value)
+        self.assertEqual(cost, 0.38376985909092359)
+
+#     def test_gradient(self):
+#         input_layer_size = 3
+#         hidden_layer_size = 5
+#         num_labels = 3
+#         m = 5
+
+#         theta1 = debug_initialize_weights((hidden_layer_size, input_layer_size))
+#         theta2 = debug_initialize_weights((num_labels, hidden_layer_size))
+
+#         X = debug_initialize_weights((m, input_layer_size-1))
+#         y = np.mod(np.arange(1, m+1), num_labels).T
+
+#         weights = np.concatenate((
+#             theta1.ravel(order='F'),
+#             theta2.ravel(order='F')
+#         ))
+
+#         bp = BackPropagation((theta1, theta2), X, y, lambda_value=0)
+
+#         cost = bp._cost_function(weights)
+#         gradient = bp._gradient(weights)
+
+    def test_train(self):
+        theta1 = random_weights(THETAS[0].shape)
+        theta2 = random_weights(THETAS[1].shape)
+        thetas = (theta1, theta2)
+        lambda_value = 2
+
+        nn = NeuralNetwork(thetas, training_set=NUMBERS, labels=LABELS)
+        weights = nn.train(lambda_value, maxiter=10, disp=False)[0]
+        cost = nn._cost_function(weights, lambda_value)
+
+        self.assertTrue(cost < 2)
 
 
 if __name__ == '__main__':
