@@ -1,34 +1,32 @@
 import numpy as np
+from scipy.optimize import fmin_cg
 
-
-def sigmoid(z):
-    return 1/(1+np.exp(-z))
-
-
-def sigmoid_gradient(z):
-    return sigmoid(z)*(1-sigmoid(z))
-
-
-def random_weights(size, epsilon=0.12):
-        return np.random.rand(*size)*2*epsilon-epsilon
-
-
-def add_bias(z, values_function=np.ones):
-    values = values_function((z.shape[0], 1))
-    return np.hstack((values, z))
-
-
-def del_bias(z):
-    return np.delete(z, 0, 1)
+from helpers import add_bias,\
+                    del_bias,\
+                    sigmoid,\
+                    sigmoid_gradient,\
+                    random_weights,\
+                    flatten_matrices,\
+                    reshape_vector,\
+                    debug_initialize_weights
 
 
 class BackPropagation(object):
-    def __init__(self, weights, training_set, labels, add_bias=True):
-        self.training_set = training_set
-        self.training_set_length = training_set.shape[0]
+    def __init__(self, weights, training_set, labels, add_bias=True, lambda_value=0):
+        self.X = training_set
+        self.m = self.X.shape[0]
         self.labels = labels
         self.num_labels = weights[-1].shape[0]
         self.add_bias = add_bias
+        self.weights, self.weight_shapes = flatten_matrices(weights)
+        self.l = lambda_value
+
+        self.Y = np.zeros((self.m, self.num_labels))
+        for i in range(self.m):
+            self.Y[i][self.labels[i]] = 1
+
+    def _flatten_weights(self, weights):
+        return np.concatenate([w.ravel() for w in weights])
 
     def _penalty(self, weights):
         return np.sum([
@@ -36,37 +34,45 @@ class BackPropagation(object):
             for theta in weights
         ])
 
-    def _cost_function(self, weights, lambda_value):
-        # TODO : activation_function arg
-        l = lambda_value
-        m = self.training_set.shape[0]
-        Y = np.zeros((m, self.num_labels))
-        X = self.training_set
-
-        for i in range(m):
-            Y[i][self.labels[i]] = 1
-
+    def _activations(self, weights):
         if self.add_bias:
-            input_layer = add_bias(X)
+            input_layer = add_bias(self.X)
         else:
-            input_layer = X
+            input_layer = self.X
 
         # activations = [a1, a2, ...]
         activations = [input_layer]
-        z = []
+        self.z = []
 
         # Process hidden layers
         for i in range(len(weights)):
-            z.append(np.dot(activations[-1], weights[i].T))
-            activations.append(sigmoid(z[-1]))
+            self.z.append(np.dot(activations[-1], weights[i].T))
+            activations.append(sigmoid(self.z[-1]))
 
             # Don't add bias terms on the last layer
             if self.add_bias and i < len(weights)-1:
                 activations[-1] = add_bias(activations[-1])
 
+        return activations
+
+    def _cost_function(self, weights):
+        weights = list(reshape_vector(weights, self.weight_shapes))
+        activations = self._activations(weights)
+
+        p = self._penalty(weights)
+        h = activations[-1]  # Output layer
+        r = (self.l*p)/(2*self.m)
+        cost = np.sum(np.sum(-self.Y*np.log(h) - (1-self.Y)*np.log(1-h), axis=1))/self.m + r
+
+        return cost
+
+    def _gradient(self, weights):
+        weights = list(reshape_vector(weights, self.weight_shapes))
+        activations = self._activations(weights)
+
         # sigmas = [sigma3, sigma2, ...]
-        sigmas = [activations[-1]-Y]
-        for layer in z[:-1]:
+        sigmas = [activations[-1]-self.Y]
+        for layer in self.z[:-1]:
             if self.add_bias:
                 layer = add_bias(layer)
                 sigma = np.dot(sigmas[-1], weights[1])*sigmoid_gradient(layer)
@@ -82,21 +88,13 @@ class BackPropagation(object):
         for theta, delta in zip(weights, deltas):
             theta = del_bias(theta)
             theta = add_bias(theta, values_function=np.zeros)
-            gradient = delta/m + np.dot((l/m), theta)
+            gradient = delta/self.m + np.dot((self.l/self.m), theta)
             gradients.append(gradient.T.ravel())
 
-        gradient = np.concatenate(gradients)
-
-        p = self._penalty(weights)
-        h = activations[-1] # Output layer
-        r = (l*p)/(2*m)
-        cost = np.sum(np.sum(-Y*np.log(h) - (1-Y)*np.log(1-h), axis=1))/m + r
-
-        return (cost, gradient)
+        return np.concatenate(gradients)
 
     def train(self):
-        self._cost_function()
-        return None
+        return weights
 
 
 class NeuralNetwork(object):
@@ -124,4 +122,4 @@ class NeuralNetwork(object):
             add_bias=self.add_bias
         )
 
-        self.weights = training_method.train()
+        self.weights = training_method.train(self.weights)
