@@ -65,10 +65,10 @@ class NeuralNetwork(object):
 
         # sigmas = [sigma3, sigma2, ...]
         sigmas = [activations[-1]-self.Y]
-        for layer in self.z[:-1]:
+        for ind,layer in enumerate(self.z[-2::-1]):
             if self.add_bias:
                 layer = add_bias(layer)
-                sigma = np.dot(sigmas[-1], thetas[1])*sigmoid_gradient(layer)
+                sigma = np.dot(sigmas[-1], thetas[-1-ind])*sigmoid_gradient(layer)
                 sigmas.append(del_bias(sigma))
 
         # deltas = [delta1, delta2, ...]
@@ -118,6 +118,7 @@ class NeuralNetwork(object):
 
         # Force full_output
         kwargs['full_output'] = True
+        #kwargs['retall'] = True
 
         # Return (weights, fopt, func_calls, grad_calls, warnflag) tuple
         return fmin_cg(*args, **kwargs)
