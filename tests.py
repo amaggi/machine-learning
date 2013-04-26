@@ -6,7 +6,7 @@ import unittest
 
 from ml import NeuralNetwork
 from helpers import sigmoid, sigmoid_gradient, random_weights,\
-                    flatten_matrices, reshape_vector, debug_initialize_theta
+    flatten_matrices, reshape_vector, debug_initialize_theta
 
 
 datafile = np.load('data/data.npz')
@@ -56,7 +56,7 @@ class TestNeuralNetwork(unittest.TestCase):
 
     def test_penalty(self):
         penalty = self.nn._penalty(THETAS)
-        self.assertEqual(penalty, 961.40693929604765)
+        np.testing.assert_almost_equal(penalty, 961.4069392, decimal=5)
 
     def test_predict(self):
         # with ProcessPoolExecutor() as executor:
@@ -73,12 +73,12 @@ class TestNeuralNetwork(unittest.TestCase):
     def test_non_regularized_cost_function(self):
         lambda_value = 0
         cost = self.nn._cost_function(self.nn.weights, lambda_value)
-        self.assertEqual(cost, 0.28762916516131881)
+        np.testing.assert_almost_equal(cost, 0.2876291, decimal=5)
 
     def test_regularized_cost_function(self):
         lambda_value = 1
         cost = self.nn._cost_function(self.nn.weights, lambda_value)
-        self.assertEqual(cost, 0.38376985909092359)
+        np.testing.assert_almost_equal(cost, 0.3837698, decimal=5)
 
 #     def test_gradient(self):
 #         input_layer_size = 3
